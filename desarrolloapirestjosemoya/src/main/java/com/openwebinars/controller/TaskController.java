@@ -2,6 +2,7 @@ package com.openwebinars.controller;
 
 import com.openwebinars.dto.EditTaskDto;
 import com.openwebinars.dto.GetTaskDto;
+import com.openwebinars.model.TaskStatus;
 import com.openwebinars.service.TaskService;
 import com.openwebinars.users.User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -227,6 +228,17 @@ public class TaskController {
     public ResponseEntity<?> delete(@PathVariable Long id) {
         taskService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/status/{status}")
+    public List<GetTaskDto> getByStatus(
+            @PathVariable TaskStatus status,
+            @AuthenticationPrincipal User author) {
+
+        return taskService.findByAuthorAndStatus(author, status)
+                .stream()
+                .map(GetTaskDto::of)
+                .toList();
     }
 
 
