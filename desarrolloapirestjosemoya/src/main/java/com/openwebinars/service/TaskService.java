@@ -6,11 +6,13 @@ import com.openwebinars.model.*;
 import com.openwebinars.repos.CategoryRepository;
 import com.openwebinars.repos.TagRepository;
 import com.openwebinars.repos.TaskRepository;
-import com.openwebinars.users.User;
+import com.openwebinars.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.openwebinars.dto.DashboardDto;
 
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +35,34 @@ public class TaskService {
 
     public List<Task> findByAuthorAndStatus(User author, TaskStatus status) {
         return taskRepository.findByAuthorAndStatus(author, status);
+    }
+
+    public List<Task> findByAuthorAndTitle(User author, String title) {
+        return taskRepository.findByAuthorAndTitleContainingIgnoreCase(author, title);
+    }
+
+    public List<Task> findByAuthorAndPriority(User author, TaskPriority priority) {
+        return taskRepository.findByAuthorAndPriority(author, priority);
+    }
+
+    public List<Task> findByAuthorAndImportant(User author, boolean important) {
+        return taskRepository.findByAuthorAndImportant(author, important);
+    }
+
+    public List<Task> findExpiredTasks(User author) {
+        return taskRepository.findByAuthorAndDeadlineBefore(author, LocalDateTime.now());
+    }
+
+    public List<Task> findByEstimatedMinutes(User author, Integer minutes) {
+        return taskRepository.findByAuthorAndEstimatedMinutesLessThanEqual(author, minutes);
+    }
+
+    public List<Task> findByCategory(User author, Long categoryId) {
+        return taskRepository.findByAuthorAndCategories_Id(author, categoryId);
+    }
+
+    public List<Task> findByTag(User author, Long tagId) {
+        return taskRepository.findByAuthorAndTags_Id(author, tagId);
     }
 
     public Task findById(Long id) {
@@ -119,5 +149,57 @@ public class TaskService {
         }
 
         taskRepository.deleteById(id);
+    }
+
+    public Task addTag(Long taskId, Long tagId) {
+
+        Task task = findById(taskId);
+
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new RuntimeException("Tag no encontrado"));
+
+        task.getTags().add(tag);
+
+        return taskRepository.save(task);
+    }
+
+    public Task removeTag(Long taskId, Long tagId) {
+
+        Task task = findById(taskId);
+
+        task.getTags().removeIf(tag -> tag.getId().equals(tagId));
+
+        return taskRepository.save(task);
+    }
+
+    public DashboardDto getDashboard(User author) {
+
+        List<Task> tasks = taskRepository.findByAuthor(author);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        return new DashboardDto(
+
+                tasks.size(),
+
+                tasks.stream()
+                        .filter(t -> t.getStatus() == TaskStatus.COMPLETED)
+                        .count(),
+
+                tasks.stream()
+                        .filter(t -> t.getStatus() == TaskStatus.PENDING)
+                        .count(),
+
+                tasks.stream()
+                        .filter(Task::isImportant)
+                        .count(),
+
+                tasks.stream()
+                        .filter(t ->
+                                t.getDeadline() != null &&
+                                        t.getDeadline().isBefore(now))
+                        .count()
+
+        );
     }
 }

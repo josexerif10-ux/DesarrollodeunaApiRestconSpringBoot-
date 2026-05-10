@@ -34,24 +34,27 @@ public class SecurityConfig {
 
         http
                 .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .httpBasic(Customizer.withDefaults())
                 .exceptionHandling(excep -> {
                     excep.accessDeniedHandler(accessDeniedHandler);
                     excep.authenticationEntryPoint(authenticationEntryPoint);
                 })
-                .authorizeHttpRequests((authz) -> authz
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/auth/register").permitAll()
+                .authorizeHttpRequests(authz -> authz
+
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
+
                         .anyRequest().authenticated()
                 );
-
-
-        http.csrf((csrf) -> {
-            csrf.disable();
-        });
-        http.headers((headers) ->
-                headers.frameOptions((opts) -> opts.disable()));
         return http.build();
     }
 

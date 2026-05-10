@@ -1,6 +1,5 @@
 package com.openwebinars.model;
 
-import com.openwebinars.users.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;

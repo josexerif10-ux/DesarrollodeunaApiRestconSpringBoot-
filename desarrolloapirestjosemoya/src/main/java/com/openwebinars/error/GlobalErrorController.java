@@ -4,15 +4,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalErrorController extends ResponseEntityExceptionHandler {
+public class GlobalErrorController{
 
     @ExceptionHandler(TaskNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -38,6 +41,29 @@ public class GlobalErrorController extends ResponseEntityExceptionHandler {
         ProblemDetail result = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
         result.setTitle("Error de autorización");
         result.setType(URI.create("https://www.openwebinars.net/errors/authorization"));
+        return result;
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ProblemDetail handleValidationErrors(MethodArgumentNotValidException ex) {
+
+        ProblemDetail result = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Existen errores de validación en la petición"
+        );
+
+        result.setTitle("Error de validación");
+        result.setType(URI.create("https://www.openwebinars.net/errors/validation"));
+
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
+        );
+
+        result.setProperty("errors", errors);
+
         return result;
     }
 

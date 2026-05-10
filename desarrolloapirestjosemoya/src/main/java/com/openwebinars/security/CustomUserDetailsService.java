@@ -1,6 +1,6 @@
 package com.openwebinars.security;
 
-import com.openwebinars.users.UserRepository;
+import com.openwebinars.repos.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
